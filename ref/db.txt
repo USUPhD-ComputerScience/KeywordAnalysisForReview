@@ -1,33 +1,40 @@
 psql reviewext -U postgres -P phdcs2014
 
+// release_dates: l,l,l,l
 CREATE TABLE apps(
-   ID		INT NOT NULL,
-   appid	TEXT    NOT NULL,
+   appid	TEXT PRIMARY KEY  NOT NULL,
    name		TEXT    NOT NULL,
    count	BIGINT NOT NULL,
-   PRIMARY KEY( ID )
+   release_dates TEXT,
+   start_date BIGINT
 );
 
+// cleansed_text: i,i,i;i,i,i,i,i;i,i,i,i
 CREATE TABLE reviews(
-   ID				INT PRIMARY KEY NOT NULL,
-   appid			INT	references apps(ID),
+   reviewid			TEXT PRIMARY KEY NOT NULL,
+   appid			TEXT	references apps(appid),
    title			TEXT,
    raw_text			TEXT,
    cleansed_text	TEXT,
    document_version	TEXT,
-   reviewid			TEXT    NOT NULL,
    device			TEXT,
    rating			INT 	NOT NULL,
    creation_time	BIGINT 	NOT NULL,
    UNIQUE (appid, reviewid)
 );
 
+// ratex_byday: i,i,i,i,i,i,i
+// POS: pos,i;pos,i;pos,i
 CREATE TABLE keywords(
    ID			INT PRIMARY KEY NOT NULL,
-   appid		INT	references apps(ID),
+   appid		TEXT references apps(appid),
    keyword		TEXT,
-   rating_count	BYTEA,
-   time_series	BYTEA,
+   rate1_byday	TEXT,
+   rate2_byday	TEXT,
+   rate3_byday	TEXT,
+   rate4_byday	TEXT,
+   rate5_byday	TEXT,
+   POS			TEXT,
    UNIQUE (appid, keyword)
 );
 
@@ -35,6 +42,13 @@ CREATE TABLE review_keyword(
    ID			INT PRIMARY KEY NOT NULL,
    reviewid		INT	references reviews(ID),
    keywordid	INT	references keywords(ID),
-   tfidf		REAL,
+   tf			INT,
    UNIQUE (reviewid, keywordid)
+);
+
+CREATE TABLE word2vec(
+   ID			INT PRIMARY KEY NOT NULL,
+   keywordid		INT	references keywords(ID),
+   vector		REAL[],
+   UNIQUE (keywordid)
 );
