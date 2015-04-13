@@ -18,9 +18,10 @@ public class CrawlerMain {
 	public static void main(String[] args) throws Throwable {
 		// TODO Auto-generated method stub
 		System.out.println("====== Crawling reviews from Google Play ======");
-		if(args.length != 2 ){
+		if (args.length != 2) {
 
-			System.out.println("Need to provide both Apps List AND login credential files. Exitting..");
+			System.out
+					.println("Need to provide both Apps List AND login credential files. Exitting..");
 			return;
 		}
 		Scanner reader = new Scanner(new FileReader(args[1]));
@@ -63,6 +64,7 @@ public class CrawlerMain {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
+				failedAttempts = 0;
 				iterationCount = 0;
 				crawler = new Crawler(login, password, androidid);
 				continue;
@@ -82,6 +84,7 @@ public class CrawlerMain {
 			}
 			if (iterationCount == 12) {
 				iterationCount = 0;
+				failedAttempts = 0;
 				crawler = new Crawler(login, password, androidid);
 			}
 
