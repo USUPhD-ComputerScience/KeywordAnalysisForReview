@@ -17,5 +17,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/googleplaycrawler-0.1-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/stanford-postagger-3.5.0.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

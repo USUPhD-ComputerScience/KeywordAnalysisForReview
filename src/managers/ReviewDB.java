@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import model.Application;
 import model.ReviewForAnalysis;
@@ -74,7 +75,8 @@ public class ReviewDB {
 	public List<Application> queryMultipleAppsInfo(int minReviews)
 			throws SQLException {
 		List<Application> appList = new ArrayList<>();
-		String fields[] = { "appid", "name", "count", "release_dates" };
+		String fields[] = { "appid", "name", "count", "release_dates",
+				"start_date", "day_index" };
 		String condition = "count>=" + minReviews;
 
 		ResultSet results;
@@ -84,19 +86,21 @@ public class ReviewDB {
 			String name = results.getString("name");
 			String appid = results.getString("appid");
 			int count = results.getInt("count");
-			Array release_dates = results.getArray("release_dates");
 			Long[] releaseDates = text2long1D(results
 					.getString("release_dates"));
 
 			if (appid != null) {
-				appList.add(new Application(appid, name, count, releaseDates));
+				appList.add(new Application(appid, name, count, releaseDates,
+						results.getLong("start_date"), results
+								.getInt("day_index")));
 			}
 		}
 		return appList;
 	}
 
 	public Application querySingleAppInfo(String appid) throws SQLException {
-		String fields[] = { "appid", "name", "count", "release_dates" };
+		String fields[] = { "appid", "name", "count", "release_dates",
+				"start_date", "day_index" };
 		String condition = "appid='" + appid + "'";
 		// condition = // "count>1000";
 
@@ -110,7 +114,9 @@ public class ReviewDB {
 			Long[] releaseDates = (Long[]) release_dates.getArray();
 
 			if (appid != null) {
-				return new Application(appid, name, count, releaseDates);
+				return new Application(appid, name, count, releaseDates,
+						results.getLong("start_date"),
+						results.getInt("day_index"));
 			}
 		}
 		return null;
@@ -160,6 +166,12 @@ public class ReviewDB {
 		dbconnector.update(APPS_TABLE, "count=" + returnCount, condition);
 	}
 
+	public void updateIndexesForApp(String appid, int dayIndex)
+			throws SQLException {
+		String condition = "appid='" + appid + "'";
+		dbconnector.update(APPS_TABLE, "day_index =" + dayIndex, condition);
+	}
+
 	public boolean insertReview(ReviewForCrawler rev, String appid)
 			throws SQLException {
 		String values[] = new String[9];
@@ -176,7 +188,8 @@ public class ReviewDB {
 		int arrays[] = new int[] { 0, 0, 0, 0, 0, 0, 0, 1, 2 };
 		int id = 0;
 		try {
-			id = dbconnector.insert(REVIEWS_TABLE, values, arrays);
+			id = dbconnector
+					.insert(REVIEWS_TABLE, values, arrays, false, false);
 		} catch (SQLException e) {
 		}
 		if (id == 0)
@@ -186,46 +199,117 @@ public class ReviewDB {
 
 	public void addNewApp(String appid, String name) throws SQLException {
 
-		String values[] = new String[5];
+		String values[] = new String[6];
 		values[0] = appid; // appid
 		values[1] = name;
 		values[2] = String.valueOf(0);
 		values[3] = "null";
 		values[4] = String.valueOf(System.currentTimeMillis());
-		int arrays[] = new int[] { 0, 0, 2, 0, 2 };
-		dbconnector.insert(APPS_TABLE, values, arrays);
+		values[5] = String.valueOf(System.currentTimeMillis());
+		int arrays[] = new int[] { 0, 0, 2, 0, 2, 2 };
+		dbconnector.insert(APPS_TABLE, values, arrays, false, false);
 
 	}
 
-	public void close() {
+	public void close() throws SQLException {
 		dbconnector.close();
 	}
 
-	public List<ReviewForAnalysis> queryReviews(Application app)
+	public int addKeyWord(String w, String POS, String appid)
 			throws SQLException {
+		String values[] = new String[8];
+		values[0] = appid; // appid
+		values[1] = w;
+		values[2] = "null";
+		values[3] = "null";
+		values[4] = "null";
+		values[5] = "null";
+		values[6] = "null";
+		values[7] = POS + ",1";
+		int arrays[] = new int[] { 0, 0, 0, 0, 0, 0, 0, 0 };
+		return dbconnector.insert(KEYWORDS_TABLE, values, arrays, true, true);
+	}
+
+	/*UPDATE weather SET temp_lo = temp_lo+1, temp_hi = temp_lo+15, prcp = DEFAULT
+	  WHERE city = 'San Francisco' AND date = '2003-07-03'
+	  RETURNING temp_lo, temp_hi, prcp;*/
+	public int updateKeyWord(int wordid, String appid, int[] rate1,
+			int[] rate2, int[] rate3, int[] rate4, int[] rate5,
+			Map<String, Integer> POSs) throws SQLException {
+		String rate1Update = "rate1_byday=" + int1D2Text(rate1);
+		String rate2Update = "rate2_byday=" + int1D2Text(rate2);
+		String rate3Update = "rate3_byday=" + int1D2Text(rate3);
+		String rate4Update = "rate4_byday=" + int1D2Text(rate4);
+		String rate5Update = "rate5_byday=" + int1D2Text(rate5);
+		String POSUpdate = "POS=" + map2Text(POSs);
+		String updateFields = rate1Update + ", " + rate2Update + ", "
+				+ rate3Update + ", " + rate4Update + ", " + rate5Update + ", "
+				+ POSUpdate;
+		return dbconnector.update(KEYWORDS_TABLE, updateFields, "ID=" + wordid
+				+ " AND " + "appid='" + appid + "'");
+	}
+
+	public int updateKeyWord(Word word, String appid) throws SQLException {
+		int[][] timeseries = word.getTimeSeriesByRating();
+		int[] tem = new int[timeseries[0].length - 1];
+		for (int k = 0; k < tem.length; k++)
+			tem[k] = timeseries[0][k];
+		String rate1Update = "rate1_byday='" + int1D2Text(tem) + "'";
+		for (int k = 0; k < tem.length; k++)
+			tem[k] = timeseries[1][k];
+		String rate2Update = "rate2_byday='" + int1D2Text(tem) + "'";
+		for (int k = 0; k < tem.length; k++)
+			tem[k] = timeseries[2][k];
+		String rate3Update = "rate3_byday='" + int1D2Text(tem) + "'";
+		for (int k = 0; k < tem.length; k++)
+			tem[k] = timeseries[3][k];
+		String rate4Update = "rate4_byday='" + int1D2Text(tem) + "'";
+		for (int k = 0; k < tem.length; k++)
+			tem[k] = timeseries[4][k];
+		String rate5Update = "rate5_byday='" + int1D2Text(tem) + "'";
+
+		String POSUpdate = "POS='" + map2Text(word.getPOSSet()) + "'";
+		String updateFields = rate1Update + ", " + rate2Update + ", "
+				+ rate3Update + ", " + rate4Update + ", " + rate5Update + ", "
+				+ POSUpdate;
+		return dbconnector.update(KEYWORDS_TABLE, updateFields,
+				"ID=" + word.getWordID() + " AND " + "appid='" + appid + "'");
+	}
+
+	public List<ReviewForAnalysis> queryReviews(Application app,
+			boolean preprocessing) throws SQLException {
 		List<ReviewForAnalysis> reviews = new ArrayList<>();
 		String fields[] = { "title", "raw_text", "cleansed_text",
 				"document_version", "reviewid", "device", "rating",
 				"creation_time" };
+
 		String condition = "appid='" + app.getAppID() + "'";
+		if (preprocessing)
+			condition += " AND creation_time >= " + app.getPreprocessedDate();
+		condition += "ORDER BY creation_time ASC";
+
 		ResultSet results;
 		results = dbconnector.select(REVIEWS_TABLE, fields, condition);
 		while (results.next()) {
+			int rating = results.getInt("rating");
+			if (rating == 0)
+				continue;
 			String reviewID = results.getString("reviewid");
-			long creationTime = results.getLong("creationtime");
+			long creationTime = results.getLong("creation_time");
 			String raw_text = results.getString("raw_text");
-			int[][] cleansed_text = (int[][]) results.getArray("cleansed_text")
-					.getArray();
+			int[][] cleansed_text = text2Int2D(results
+					.getString("cleansed_text"));
 			if (raw_text.indexOf('\t') < 0) // Not from Android Market
-				raw_text = results.getString("title") + "." + raw_text;
+				raw_text = results.getString("title") + ". " + raw_text;
 
 			ReviewForAnalysis.ReviewBuilder reviewBuilder = new ReviewForAnalysis.ReviewBuilder();
 			reviewBuilder.rawText(raw_text);
 			reviewBuilder.cleansedText(cleansed_text);
 			reviewBuilder.reviewId(reviewID);
 			reviewBuilder.deviceName(results.getString("device"));
-			reviewBuilder.documentVersion(results.getString("documentversion"));
-			reviewBuilder.rating(results.getInt("rating"));
+			reviewBuilder
+					.documentVersion(results.getString("document_version"));
+			reviewBuilder.rating(rating);
 			reviewBuilder.creationTime(creationTime);
 			reviewBuilder.application(app);
 			reviews.add(reviewBuilder.createReview());
@@ -233,10 +317,122 @@ public class ReviewDB {
 		return reviews;
 	}
 
+	public Word querySingleWord(int DBID, Application app) throws SQLException {
+		String fields[] = { "ID", "appid", "keyword", "rate1_byday",
+				"rate2_byday", "rate3_byday", "rate4_byday", "rate5_byday",
+				"POS" };
+		String condition = "ID=" + DBID + " AND appid='" + app.getAppID() + "'";
+		ResultSet results;
+		results = dbconnector.select(KEYWORDS_TABLE, fields, condition);
+		Word word = null;
+		while (results.next()) {
+			int ID = results.getInt("ID");
+			int[][] ratesByDays = new int[5][];
+			ratesByDays[0] = text2Int1D(results.getString("rate1_byday"));
+			ratesByDays[1] = text2Int1D(results.getString("rate2_byday"));
+			ratesByDays[2] = text2Int1D(results.getString("rate3_byday"));
+			ratesByDays[3] = text2Int1D(results.getString("rate4_byday"));
+			ratesByDays[4] = text2Int1D(results.getString("rate5_byday"));
+			Map<String, Integer> POSs = text2Map(results.getString("POS"));
+			word = new Word(DBID, results.getString("keyword"), POSs, app,
+					ratesByDays, ratesByDays[0].length);
+		}
+		return word;
+	}
+
+	public Word queryWordByKey(String key, Application app) throws SQLException {
+		String fields[] = { "ID", "appid", "keyword", "rate1_byday",
+				"rate2_byday", "rate3_byday", "rate4_byday", "rate5_byday",
+				"POS" };
+		String condition = "appid='" + app.getAppID() + "' AND keyword='" + key
+				+ "'";
+		ResultSet results;
+		results = dbconnector.select(KEYWORDS_TABLE, fields, condition);
+		Word word = null;
+		while (results.next()) {
+			int ID = results.getInt("ID");
+			int[][] ratesByDays = new int[5][];
+			ratesByDays[0] = text2Int1D(results.getString("rate1_byday"));
+			ratesByDays[1] = text2Int1D(results.getString("rate2_byday"));
+			ratesByDays[2] = text2Int1D(results.getString("rate3_byday"));
+			ratesByDays[3] = text2Int1D(results.getString("rate4_byday"));
+			ratesByDays[4] = text2Int1D(results.getString("rate5_byday"));
+			Map<String, Integer> POSs = text2Map(results.getString("POS"));
+			word = new Word(ID, key, POSs, app, ratesByDays,
+					ratesByDays[0].length);
+		}
+		return word;
+	}
+
+	public List<Word> queryWordsForAnApp(Application app) throws SQLException {
+		List<Word> wordList = new ArrayList<>();
+		String fields[] = { "ID", "appid", "keyword", "rate1_byday",
+				"rate2_byday", "rate3_byday", "rate4_byday", "rate5_byday",
+				"POS" };
+		String condition = "appid='" + app.getAppID() + "'";
+		ResultSet results;
+		results = dbconnector.select(KEYWORDS_TABLE, fields, condition);
+		Word word = null;
+		while (results.next()) {
+			int ID = results.getInt("ID");
+			int[][] ratesByDays = new int[5][];
+			ratesByDays[0] = text2Int1D(results.getString("rate1_byday"));
+			ratesByDays[1] = text2Int1D(results.getString("rate2_byday"));
+			ratesByDays[2] = text2Int1D(results.getString("rate3_byday"));
+			ratesByDays[3] = text2Int1D(results.getString("rate4_byday"));
+			ratesByDays[4] = text2Int1D(results.getString("rate5_byday"));
+			Map<String, Integer> POSs = text2Map(results.getString("POS"));
+			word = new Word(ID, results.getString("keyword"), POSs, app,
+					ratesByDays, app.getDayIndex());
+			wordList.add(word);
+		}
+		return wordList;
+	}
+
+	public void updateCleansedText(ReviewForAnalysis rev) throws SQLException {
+		// TODO Auto-generated method stub
+		String cleansedText = int2D2Text(rev.getSentences());
+		String condition = "reviewid = '" + rev.getReviewId() + "'";
+		dbconnector.update(REVIEWS_TABLE, "cleansed_text ='" + cleansedText
+				+ "'", condition);
+	}
+
+	// /////////////////////////////////////////
+
+	private String int1D2Text(int[] int1D) {
+		if (int1D == null || int1D.length == 0)
+			return "null";
+		StringBuilder strBuilder = new StringBuilder();
+		strBuilder.append("{");
+		String prefix = "";
+		for (int i : int1D) {
+			strBuilder.append(prefix + i);
+			prefix = ",";
+		}
+		return strBuilder.toString();
+	}
+
+	private String int2D2Text(int[][] int2D) {
+		if (int2D == null || int2D.length == 0)
+			return "null";
+		StringBuilder strBuilder = new StringBuilder();
+		String prefix = "";
+		for (int[] i : int2D) {
+			strBuilder.append(prefix);
+			prefix = "";
+			for (int j : i) {
+				strBuilder.append(prefix + j);
+				prefix = ",";
+			}
+			prefix = ";";
+		}
+		return strBuilder.toString();
+	}
+
 	private int[] text2Int1D(String text) {
 		int[] argInt = null;
 		if (!text.equals("null")) {
-			String[] ints = text.split(",");
+			String[] ints = text.substring(1, text.length()).split(",");
 			argInt = new int[ints.length];
 			for (int j = 0; j < argInt.length; j++)
 				argInt[j] = Integer.parseInt(ints[j]);
@@ -247,10 +443,14 @@ public class ReviewDB {
 	private int[][] text2Int2D(String text) {
 		int[][] argIntArray = null;
 		if (!text.equals("null")) {
-			// "1,2,3;1,2,3;1,2,3"
+			// "1,2,3;1,2,3;;1,2,3"
 			String[] intArray = text.split(";");
 			argIntArray = new int[intArray.length][];
 			for (int j = 0; j < argIntArray.length; j++) {
+				if (intArray[j].equals("") || intArray[j].length() == 0) {
+					argIntArray[j] = new int[0];
+					continue;
+				}
 				String[] arr = intArray[j].split(",");
 				argIntArray[j] = new int[arr.length];
 				for (int k = 0; k < arr.length; k++)
@@ -275,6 +475,21 @@ public class ReviewDB {
 		return daMap;
 	}
 
+	private String map2Text(Map<String, Integer> daMap) {
+		// "pos,i;pos,i;pos,i"
+		if (daMap == null || daMap.isEmpty())
+			return "null";
+
+		StringBuilder strBuilder = new StringBuilder();
+		String prefix = "";
+		for (Entry<String, Integer> entry : daMap.entrySet()) {
+			strBuilder.append(prefix + entry.getKey() + "," + entry.getValue());
+			prefix = ";";
+		}
+
+		return strBuilder.toString();
+	}
+
 	private Long[] text2long1D(String text) {
 		Long[] argLong = null;
 		if (!text.equals("null")) {
@@ -286,24 +501,15 @@ public class ReviewDB {
 		return argLong;
 	}
 
-	public Word querySingleWord(int DBID, Application app) throws SQLException {
-		String fields[] = { "keyword", "appid", "rating_count", "time_series",
-				"POS" };
-		String condition = "ID=" + DBID;
-		ResultSet results;
-		results = dbconnector.select(REVIEWS_TABLE, fields, condition);
-		while (results.next()) {
-			String[] posDATA = (String[]) results.getArray("POS").getArray();
-			HashMap<String, Integer> POSset = null;
-			if (posDATA != null || posDATA.length > 0) {
-				POSset = new HashMap<>();
-			}
-			int[] count = (int[]) results.getArray("rating_count").getArray();
-			int[][] timeSeries = (int[][]) results.getArray("time_series")
-					.getArray();
-			return new Word(results.getString("keyword"), POSset, app, count,
-					timeSeries);
+	private String long1D2Text(int[] long1D) {
+		if (long1D == null || long1D.length == 0)
+			return "null";
+		StringBuilder strBuilder = new StringBuilder();
+		String prefix = "";
+		for (long i : long1D) {
+			strBuilder.append(prefix + i);
+			prefix = ",";
 		}
-		return null;
+		return strBuilder.toString();
 	}
 }

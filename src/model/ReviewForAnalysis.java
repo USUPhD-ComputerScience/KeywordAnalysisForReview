@@ -3,8 +3,13 @@ package model;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
+import util.Util;
+import NLP.NatureLanguageProcessor;
+import managers.ReviewDB;
 import managers.Vocabulary;
 
 public class ReviewForAnalysis implements Serializable {
@@ -24,12 +29,75 @@ public class ReviewForAnalysis implements Serializable {
 	private int rating;
 	private String rawText;
 
+	/**
+	 * Only for constructor. This function break a string into words in 4 steps:
+	 * 
+	 * <pre>
+	 * - Step 1: Lower case
+	 * - Step 2: PoS tagging
+	 * - Step 3: Remove StopWord
+	 * - Step 4: Use Snowball Stemming (Porter 2)
+	 * </pre>
+	 * 
+	 * @param fullSentence
+	 *            - The sentence to extract words from
+	 * @return TRUE if it successfully extracted some words, FALSE otherwise
+	 * @throws SQLException
+	 */
+	public boolean extractSentences() throws SQLException {
+		Vocabulary voc = Vocabulary.getInstance();
+
+		// first, check if this is a new day: update information on all keywords
+		// of this app.
+		application.syncDayIndex(creationTime);
+		// continue extracting sentences and keywords.
+		NatureLanguageProcessor nlp = NatureLanguageProcessor.getInstance();
+		String[] rawSentences = nlp.extractSentence(rawText);
+		int[][] sentences_temp = new int[rawSentences.length][0];
+		int countValidSen = 0;
+		for (int i = 0; i < rawSentences.length; i++) {
+			List<Integer> wordIDList = new ArrayList<>();
+			List<String> wordList = nlp.extractWordsFromText(rawSentences[i]);
+			if (wordList == null)
+				return false;
+			List<String[]> stemmedWordsWithPOS = nlp.stem(nlp
+					.findPosTag(wordList));
+
+			if (stemmedWordsWithPOS != null) {
+				for (String[] pair : stemmedWordsWithPOS) {
+					if (pair.length != 2)
+						continue;
+					// add into voc, get wordID as returning param
+					int wordid = voc.addWord(pair[0], pair[1], application,
+							rating - 1);
+					wordIDList.add(wordid);
+				}
+			}
+			if (!wordIDList.isEmpty()) {
+				countValidSen++;
+				sentences_temp[i] = Util.toIntArray(wordIDList);
+			}
+		}
+		// remove Sentences with no words
+		sentences = new int[countValidSen][0];
+		int index = 0;
+		for (int[] sen : sentences_temp) {
+			if (sen.length > 0)
+				sentences[index++] = sen;
+		}
+		return true;
+	}
+
 	public String getRawText() {
 		return rawText;
 	}
 
 	public int[][] getSentences() {
 		return sentences;
+	}
+
+	public void setSentences(int[][] sens) {
+		sentences = sens;
 	}
 
 	public int getRating() {
@@ -180,13 +248,15 @@ public class ReviewForAnalysis implements Serializable {
 
 	public void writeSentenceToFile(PrintWriter fileWriter) {
 		// TODO Auto-generated method stub
-		fileWriter.println(toProperString());
+		fileWriter.println(toString());
 	}
 
 	/**
 	 * @return the full review with each word separated by a space
 	 */
 	public String toString() {
+		if (sentences == null)
+			return "<No Data>";
 		Vocabulary voc = Vocabulary.getInstance();
 		StringBuilder strBld = new StringBuilder();
 		String prefix = "";
@@ -214,6 +284,8 @@ public class ReviewForAnalysis implements Serializable {
 	 *         are separated by .
 	 */
 	public String toProperString() {
+		if (sentences == null)
+			return "<No Data>";
 		Vocabulary voc = Vocabulary.getInstance();
 		StringBuilder strBld = new StringBuilder();
 		String prefix = "";

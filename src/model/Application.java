@@ -15,12 +15,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import managers.Vocabulary;
 import util.PostgreSQLConnector;
 
 public class Application implements Serializable {
 	/**
 	 * 
 	 */
+
+	public static final long MONTHMILIS = 2592000000L;
+	public static final long HOURMILIS = 3600000L;
+	public static final long DAYMILIS = 86400000L;
 	private static final long serialVersionUID = -2497544910820359076L;
 	private Map<String, ReviewForAnalysis> reviewMap;
 	private Set<Long> releaseDates;
@@ -28,6 +33,37 @@ public class Application implements Serializable {
 	private String name;
 	private int dbCount;
 	private int WorkingCount;
+	private long startDate;
+	private int dayIndex = -1;
+	private long dayIndex_time;
+
+	public long getPreprocessedDate() {
+		return dayIndex_time;
+	}
+
+	public long getStartDate() {
+		return startDate;
+	}
+
+	public int getDayIndex() {
+		return dayIndex;
+	}
+
+	public int syncDayIndex(long creationTime) {
+		int daysSinceStart = (int) ((creationTime - startDate) / DAYMILIS);
+		//Date d = new Date(creationTime);
+		int neededSlot = daysSinceStart - dayIndex;
+		if (neededSlot > 0) {
+			// update timeseries for all words in this app (+ slot number of new
+			// 0 to all timeseries)
+			Vocabulary.getInstance()
+					.extendKeywordsTimeseries(neededSlot, appID);
+			// update dayIndex and dayIndex_time
+			dayIndex = daysSinceStart;
+			dayIndex_time = startDate + daysSinceStart * DAYMILIS;
+		}
+		return neededSlot;
+	}
 
 	public String getAppID() {
 		return appID;
@@ -96,7 +132,8 @@ public class Application implements Serializable {
 		return reviewMap.containsKey(reviewID);
 	}
 
-	public Application(String appID, String name, int count, Long[] releaseDates) {
+	public Application(String appID, String name, int count,
+			Long[] releaseDates, long start_date, int dayID) {
 		this.appID = appID;
 		reviewMap = new HashMap<>();
 		if (releaseDates == null)
@@ -104,6 +141,10 @@ public class Application implements Serializable {
 		else
 			this.releaseDates = new HashSet<>(Arrays.asList(releaseDates));
 		dbCount = count;
+		startDate = start_date;
+		dayIndex = dayID;
+		dayIndex_time = start_date + dayID * DAYMILIS;
+		Vocabulary.getInstance().addNewApp(appID);
 	}
 
 	/**

@@ -9,6 +9,7 @@ acelerator,accelerator
 acessed,accessed
 achievemint,achievement
 acquiaintance,acquaintance
+1ame,lame
 activites,activities
 actualy,actually
 adaptative,adaptive

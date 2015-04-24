@@ -2641,9 +2641,6 @@ lode
 loft
 loge
 logo
-logy
-loin
-loll
 lone
 long
 look
@@ -2691,7 +2688,6 @@ lyon
 lyra
 lyre
 lyse
-maar
 mace
 mach
 macy
@@ -2837,7 +2833,6 @@ muck
 muff
 mule
 mull
-muon
 murk
 muse
 mush
@@ -2851,7 +2846,6 @@ myth
 naff
 naif
 nail
-naja
 name
 nana
 nape
@@ -7057,7 +7051,6 @@ logia
 logic
 logie
 logos
-lolly
 loner
 loony
 loopy
@@ -14537,7 +14530,6 @@ logion
 logjam
 g
 loiter
-lollop
 loment
 london
 y

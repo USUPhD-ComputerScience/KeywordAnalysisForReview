@@ -1,7 +1,10 @@
 package model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 // This is the word model for the entire analysis
@@ -10,15 +13,28 @@ public class Word implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -1820812245518387992L;
+	private int dbID;
 	private String word;
-	private int count;
-	private HashMap<String, Integer> POSSet;
+	private Map<String, Integer> POSSet;
 	private Application application;
 	private int hash;
 	private String POS;
 	private int POSMaxCount = 0;
+	private int count = 0;
 	private int[] CountByRating;
 	private int[][] TimeSeriesByRating;
+	private int dayIndex = 0;
+
+	public int getCurrentDay() {
+		return dayIndex;
+	}
+
+	// rate: 0-4
+	public void increaseCount(int rate) {
+		TimeSeriesByRating[rate][dayIndex] += 1;
+		CountByRating[rate] += 1;
+		count += 1;
+	}
 
 	public int[] getCountByRating() {
 		return CountByRating;
@@ -28,16 +44,39 @@ public class Word implements Serializable {
 		return TimeSeriesByRating;
 	}
 
-	public HashMap<String, Integer> getPOSSet() {
+	public Map<String, Integer> getPOSSet() {
 		return POSSet;
 	}
 
-	public Word(String w, HashMap<String, Integer> POSs, Application app,
-			int[] count, int[][] timeSeries) {
+	public int getWordID() {
+		return dbID;
+	}
+
+	public Word(int id, String w, Map<String, Integer> POSs, Application app,
+			int[][] timeSeries, int dayIndex) {
+		dbID = id;
 		word = w.intern();
-		CountByRating = count;
-		TimeSeriesByRating = timeSeries;
-		POSSet = POSs;
+		if (timeSeries == null)
+			TimeSeriesByRating = new int[5][];
+		else
+			TimeSeriesByRating = timeSeries;
+		CountByRating = new int[5];
+		if (timeSeries != null) {
+			for (int i = 0; i < 5; i++) {
+				if (timeSeries[i] == null)
+					break;
+				for (int k = 0; k < timeSeries[i].length; k++) {
+					CountByRating[i] += timeSeries[i][k];
+					count += timeSeries[i][k];
+				}
+			}
+		}
+		this.dayIndex = dayIndex;
+
+		if (POSs == null)
+			POSSet = new HashMap<>();
+		else
+			POSSet = POSs;
 		application = app;
 
 		for (Entry<String, Integer> pos : POSSet.entrySet()) {
@@ -71,14 +110,6 @@ public class Word implements Serializable {
 		return false;
 	}
 
-	public void increaseCount() {
-		count++;
-	}
-
-	public int getCount() {
-		return count;
-	}
-
 	public boolean isEqual(String w2) {
 		if (word.equals(w2))
 			return true;
@@ -90,6 +121,28 @@ public class Word implements Serializable {
 	 */
 	public String toString() {
 		return word;
+	}
+
+	public void extendTimeseries(int neededSlot) {
+		// TODO Auto-generated method stub
+		int[][] replacementTS = new int[5][neededSlot];
+		for (int i = 0; i < 5; i++) {
+			// newly created word, OR the data in db is less than 2 day new
+			if (TimeSeriesByRating[i] != null) {
+				replacementTS[i] = new int[TimeSeriesByRating[i].length
+						+ neededSlot];
+				for (int k = 0; k < TimeSeriesByRating[i].length; k++) {
+					replacementTS[i][k] = TimeSeriesByRating[i][k];
+				}
+			}
+		}
+		TimeSeriesByRating = replacementTS;
+		dayIndex = TimeSeriesByRating[0].length - 1;
+	}
+
+	public int getCount() {
+		// TODO Auto-generated method stub
+		return count;
 	}
 
 }

@@ -16,19 +16,17 @@ public class PostgreSQLConnector {
 
 	public PostgreSQLConnector(String user, String password, String database) {
 		// TODO Auto-generated constructor stub
+		String url = "jdbc:postgresql://localhost/" + database;
+
 		try {
-
-			String url = "jdbc:postgresql://localhost/" + database;
-
 			mConnect = DriverManager.getConnection(url, user, password);
 			// statements allow to issue SQL queries to the database
 			mStatement = mConnect.createStatement();
-			mDatabase = database;
-
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		mDatabase = database;
 	}
 
 	// if you dont have any condition, just pass null into it
@@ -46,16 +44,15 @@ public class PostgreSQLConnector {
 					+ table + " WHERE " + condition);
 	}
 
-	public void update(String table, String updatefield, String condition) {
+	public int update(String table, String updatefield, String condition)
+			throws SQLException {
 		// preparedStatements can use variables and are more efficient
-		if (condition != null)
-			try {
-				mStatement.executeUpdate("update " + table + " set  "
-						+ updatefield + " WHERE " + condition);
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		if (condition != null) {
+			int id = mStatement.executeUpdate("update " + table + " set  "
+					+ updatefield + " WHERE " + condition);
+			return id; // only return the first
+		} else
+			return 0;
 	}
 
 	// values: an array of values, must be in the same order as in the table
@@ -68,8 +65,8 @@ public class PostgreSQLConnector {
 	// 4 - long[]
 	// 5 - text[]
 	// 6 - text[][]
-	public int insert(String table, String values[], int[] arrays)
-			throws SQLException {
+	public int insert(String table, String values[], int[] arrays, boolean ID,
+			boolean returningID) throws SQLException {
 		// preparedStatements can use variables and are more efficient
 		String dumbValues = "";
 		String prefix = "";
@@ -77,9 +74,19 @@ public class PostgreSQLConnector {
 			dumbValues += prefix + "?";
 			prefix = ",";
 		}
-		PreparedStatement preparedStatement = mConnect
-				.prepareStatement("insert into  " + table + " values ("
-						+ dumbValues + ")");
+		PreparedStatement preparedStatement = null;
+		if (ID) {
+			if (returningID)
+				preparedStatement = mConnect.prepareStatement("insert into  "
+						+ table + " values (default," + dumbValues + ")",
+						Statement.RETURN_GENERATED_KEYS);
+			else
+				preparedStatement = mConnect.prepareStatement("insert into  "
+						+ table + " values (default," + dumbValues + ")");
+		} else {
+			preparedStatement = mConnect.prepareStatement("insert into  "
+					+ table + " values (" + dumbValues + ")");
+		}
 		// parameters start with 1
 		Array myArray;
 		for (int i = 0; i < values.length; i++) {
@@ -152,20 +159,21 @@ public class PostgreSQLConnector {
 
 		}
 		int id = preparedStatement.executeUpdate();
+		if (returningID) {
+			ResultSet rs = preparedStatement.getGeneratedKeys();
+			if (rs != null && rs.next()) {
+				id = rs.getInt("ID");
+			}
+		}
 		preparedStatement.close();
 		return id; // only return the first
 	}
 
 	// you need to close all three to make sure
-	public void close() {
-		try {
-			if (mStatement != null)
-				mStatement.close();
-			if (mConnect != null)
-				mConnect.close();
-		} catch (Exception e) {
-			// don't throw now as it might leave following closables in
-			// undefined state
-		}
+	public void close() throws SQLException {
+		if (mStatement != null)
+			mStatement.close();
+		if (mConnect != null)
+			mConnect.close();
 	}
 }

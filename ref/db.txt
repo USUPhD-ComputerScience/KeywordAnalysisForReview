@@ -1,12 +1,15 @@
 psql reviewext -U postgres -P phdcs2014
 
 // release_dates: l,l,l,l
+// start_date: the day first review was crawled. (1420095600000 = first of jan 2015)
+// day_index: index of the last day in timeseries. All review from this day to the past had been processed
 CREATE TABLE apps(
    appid	TEXT PRIMARY KEY  NOT NULL,
    name		TEXT    NOT NULL,
    count	BIGINT NOT NULL,
    release_dates TEXT,
-   start_date BIGINT
+   start_date BIGINT,
+   day_index INT
 );
 
 // cleansed_text: i,i,i;i,i,i,i,i;i,i,i,i
@@ -26,7 +29,7 @@ CREATE TABLE reviews(
 // ratex_byday: i,i,i,i,i,i,i
 // POS: pos,i;pos,i;pos,i
 CREATE TABLE keywords(
-   ID			INT PRIMARY KEY NOT NULL,
+   ID			SERIAL PRIMARY KEY NOT NULL,
    appid		TEXT references apps(appid),
    keyword		TEXT,
    rate1_byday	TEXT,

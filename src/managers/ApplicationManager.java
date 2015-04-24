@@ -39,7 +39,7 @@ public class ApplicationManager implements Serializable {
 			app = reviewDB.querySingleAppInfo(appid);
 			if (app != null) {
 				appMap.put(appid, app);
-				for (ReviewForAnalysis rev : reviewDB.queryReviews(app)) {
+				for (ReviewForAnalysis rev : reviewDB.queryReviews(app, false)) {
 					if (app.addReview(rev) != null)
 						totalReviewCount++;
 				}
@@ -59,7 +59,7 @@ public class ApplicationManager implements Serializable {
 		for (Application app : reviewDB.queryMultipleAppsInfo(minReviews)) {
 			if (app != null && appMap.get(app.getAppID()) != null) {
 				appMap.put(app.getAppID(), app);
-				for (ReviewForAnalysis rev : reviewDB.queryReviews(app)) {
+				for (ReviewForAnalysis rev : reviewDB.queryReviews(app, false)) {
 					if (app.addReview(rev) != null)
 						totalReviewCount++;
 				}
