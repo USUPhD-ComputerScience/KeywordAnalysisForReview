@@ -8,10 +8,14 @@ accuweahter,accuweather
 acelerator,accelerator
 acessed,accessed
 achievemint,achievement
+tyek,take
+kik,kick
+gr8,great
 acquiaintance,acquaintance
 1ame,lame
 activites,activities
 actualy,actually
+foreclose,forceclose
 adaptative,adaptive
 additionnal,additional
 addresslocation,address location
@@ -4451,6 +4455,10 @@ poping,popping
 workin,working
 lovee,love
 veiw,view
+veiwing,viewing
+wayyy,way
+accnt,account
+crashin,crashing
 giv,give
 smilies,smileys
 playin,playing
@@ -4991,6 +4999,8 @@ devs,developers
 verry,very
 isnt,is not
 wat,what
+instal,install
+yrs,year
 msgs,messages
 plzz,please
 messanger,messenger

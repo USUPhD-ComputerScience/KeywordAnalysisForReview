@@ -14,6 +14,10 @@ public class PostgreSQLConnector {
 	private Statement mStatement = null;
 	public String mDatabase = "";
 
+	public Connection getConnection() {
+		return mConnect;
+	}
+
 	public PostgreSQLConnector(String user, String password, String database) {
 		// TODO Auto-generated constructor stub
 		String url = "jdbc:postgresql://localhost/" + database;
@@ -37,11 +41,11 @@ public class PostgreSQLConnector {
 			field = field + "," + fields[i];
 		}
 		if (condition == null)
-			return mStatement.executeQuery("select " + field + " from  "
-					+ table);
+			return mStatement
+					.executeQuery("select " + field + " from  " + table);
 		else
-			return mStatement.executeQuery("select " + field + " from  "
-					+ table + " WHERE " + condition);
+			return mStatement.executeQuery("select " + field + " from  " + table
+					+ " WHERE " + condition);
 	}
 
 	public int update(String table, String updatefield, String condition)
@@ -53,6 +57,11 @@ public class PostgreSQLConnector {
 			return id; // only return the first
 		} else
 			return 0;
+	}
+
+	// this is for flexibility
+	public ResultSet select(String query) throws SQLException {
+		return mStatement.executeQuery("select " + query);
 	}
 
 	// values: an array of values, must be in the same order as in the table
@@ -77,15 +86,16 @@ public class PostgreSQLConnector {
 		PreparedStatement preparedStatement = null;
 		if (ID) {
 			if (returningID)
-				preparedStatement = mConnect.prepareStatement("insert into  "
-						+ table + " values (default," + dumbValues + ")",
+				preparedStatement = mConnect.prepareStatement(
+						"insert into  " + table + " values (default,"
+								+ dumbValues + ")",
 						Statement.RETURN_GENERATED_KEYS);
 			else
 				preparedStatement = mConnect.prepareStatement("insert into  "
 						+ table + " values (default," + dumbValues + ")");
 		} else {
-			preparedStatement = mConnect.prepareStatement("insert into  "
-					+ table + " values (" + dumbValues + ")");
+			preparedStatement = mConnect.prepareStatement(
+					"insert into  " + table + " values (" + dumbValues + ")");
 		}
 		// parameters start with 1
 		Array myArray;

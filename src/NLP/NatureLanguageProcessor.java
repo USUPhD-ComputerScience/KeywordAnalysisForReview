@@ -10,17 +10,19 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+
 import au.com.bytecode.opencsv.CSVReader;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 
 public class NatureLanguageProcessor {
-	public static final String[] POSLIST = { "''", "(", ")", ",", "--", ".",
-			":", "UH", "VB", "VBD", "VBG", "VBN", "VBP", "VBZ", "WDT", "WP",
-			"WP$", "WRB", "$", "``", "NNPS", "NNS", "PDT", "POS", "PRP",
-			"PRP$", "RB", "RBR", "RBS", "RP", "SYM", "TO", "CC", "CD", "DT",
-			"EX", "FW", "IN", "JJ", "JJR", "JJS", "LS", "MD", "NN", "NNP" };
+	public static final String[] POSLIST = { "UH", "VB", "VBD", "VBG", "VBN",
+			"VBP", "VBZ", "WDT", "WP", "WP$", "WRB", "$", "``", "NNPS", "NNS",
+			"PDT", "POS", "PRP", "PRP$", "RB", "RBR", "RBS", "RP", "SYM", "TO",
+			"CC", "CD", "DT", "EX", "FW", "IN", "JJ", "JJR", "JJS", "LS", "MD",
+			"NN", "NNP" };
 
 	public static final Set<String> POSSET = new HashSet<>(
 			Arrays.asList(POSLIST));
@@ -30,8 +32,13 @@ public class NatureLanguageProcessor {
 		return stopWordSet;
 	}
 
+	public HashMap<String, String[]> getCorrectionMap() {
+		return correctionMap;
+	}
+
 	private static NatureLanguageProcessor instance = null;
 	MaxentTagger PoSTagger;
+	private static final Map<String, String> POSCorrectionMap = new HashMap<>();
 	private static final HashMap<String, Integer> realDictionary = new HashMap<>();
 	private static final HashMap<String, String[]> correctionMap = new HashMap<>();
 
@@ -41,10 +48,10 @@ public class NatureLanguageProcessor {
 		return instance;
 	}
 
-	private static void loadCorrectionMap(File file)
+	private static void loadCorrectionMap(File dictfile, File posFile)
 			throws FileNotFoundException {
 		// TODO Auto-generated method stub
-		Scanner br = new Scanner(new FileReader(file));
+		Scanner br = new Scanner(new FileReader(dictfile));
 		while (br.hasNextLine()) {
 			String[] pair = br.nextLine().split(",");
 			if (pair.length == 2)
@@ -52,6 +59,16 @@ public class NatureLanguageProcessor {
 
 		}
 		br.close();
+
+		br = new Scanner(new FileReader(posFile));
+		while (br.hasNextLine()) {
+			String[] pair = br.nextLine().split(",");
+			if (pair.length == 2)
+				POSCorrectionMap.put(pair[0], pair[1]);
+
+		}
+		br.close();
+
 	}
 
 	private static void loadDictionary(File[] fileLists) throws Exception {
@@ -63,12 +80,17 @@ public class NatureLanguageProcessor {
 		}
 	}
 
+	public HashMap<String, Integer> getRealDictionary() {
+		return realDictionary;
+	}
+
 	private NatureLanguageProcessor() {
 		readStopWordsFromFile();
 		PoSTagger = new MaxentTagger(
 				"lib/dictionary/POS/english-left3words-distsim.tagger");
 		try {
-			loadCorrectionMap(new File("lib/dictionary/Map/wordMapper.txt"));
+			loadCorrectionMap(new File("lib/dictionary/Map/wordMapper.txt"),
+					new File("lib/dictionary/Map/posMapper.txt"));
 			loadDictionary(new File("lib/dictionary/improvised").listFiles());
 			Porter2StemmerInit();
 		} catch (Exception e) {
@@ -80,7 +102,7 @@ public class NatureLanguageProcessor {
 	private void readStopWordsFromFile() {
 		stopWordSet = new HashSet<>();
 		System.err
-				.println(">>Read StopWords from file - englishImprovised.stop");
+				.println(">Read StopWords from file - englishImprovised.stop");
 		CSVReader reader = null;
 		try {
 			reader = new CSVReader(new FileReader(
@@ -136,7 +158,7 @@ public class NatureLanguageProcessor {
 		return POSSET.contains(PoS);
 	}
 
-	public List<String> extractWordsFromText(String text) {
+	public static List<String> extractWordsFromText(String text) {
 		text = text.toLowerCase();
 		String[] words = text.split("[^a-z0-9']+");
 		// SymSpell symspell = SymSpell.getInstance();
@@ -209,7 +231,6 @@ public class NatureLanguageProcessor {
 	public List<String[]> findPosTag(List<String> wordList) {
 		if (wordList == null)
 			return null;
-		SymSpell spellCorrector = SymSpell.getInstance();
 		StringBuilder textForTag = new StringBuilder();
 		String prefix = "";
 		for (String word : wordList) {
@@ -228,8 +249,12 @@ public class NatureLanguageProcessor {
 		for (int i = 0; i < words.length; i++) {
 			String[] w = words[i].split("_");
 			// if (!stopWordSet.contains(w[0]))
-			if (w.length == 2)
+			if (w.length == 2 && POSSET.contains(w[1])) {
+				String pos = POSCorrectionMap.get(w[0]);
+				if (pos != null)
+					w[1] = pos;
 				results.add(w);
+			}
 		}
 		return results;
 	}

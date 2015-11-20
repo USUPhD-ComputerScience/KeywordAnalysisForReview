@@ -271,7 +271,7 @@ public class CustomStemmer {
 		if (seq.length < 4 && isVowel(seq[seq.length - 2])) {
 			v.append(c1);
 			v.append('e');
-			return v.toString(); 
+			return v.toString();
 		}
 		if (vowelCount == 1 && c2 == c1 && isRemovableDoubleConsonents(c1))
 			return v.toString();
@@ -284,8 +284,8 @@ public class CustomStemmer {
 			if (p0 > p1)
 				v.append('e');
 		} catch (java.lang.ArrayIndexOutOfBoundsException e) {
-			e.printStackTrace();
-			System.out.println("" + c3 + c2 + c1 + 'e');
+			// e.printStackTrace();
+			System.out.println("No tri-gram for " + c3 + c2 + c1 + 'e');
 		}
 
 		return v.toString();
@@ -377,6 +377,7 @@ public class CustomStemmer {
 
 	public String[] stem(String[] pair) {
 		// TODO Auto-generated method stub
+		boolean irre = false;
 		String result[] = { null, null };
 		if (pair[1].equals("NNS") || pair[1].equals("NNPS")) {
 			result[0] = stemNNS(pair[0]).intern();
@@ -386,6 +387,8 @@ public class CustomStemmer {
 					|| pair[1].equals("VBN") || pair[1].equals("VBZ")) {
 				result[0] = irregularVerbMap.get(pair[0]);
 				result[1] = "VB".intern();
+				if (result[0] != null)
+					irre = true;
 			} else {
 				result[0] = pair[0];
 				if (pair[1].equals("VBP"))
@@ -413,7 +416,14 @@ public class CustomStemmer {
 				result[1] = "VB".intern();
 			}
 		}
-		result[0] = SymSpell.getInstance().correctThisWord(result[0]);
+		// all words end with "ing"
+		// known problems: viking
+		// if (result[0].endsWith("ing")){
+		// result[0] = stemVBG(result[0].intern());
+		// result[1] = "VB".intern();
+		// }
+		if (!irre)
+			result[0] = SymSpell.getInstance().correctThisWord(result[0]);
 		return result;
 	}
 
@@ -422,179 +432,179 @@ public class CustomStemmer {
 		return stemVBD(verb);
 	}
 
-//	private void irregularVerbRedundancyTest() {
-//		Map<String, StringBuilder> irregularSet = new HashMap<>();
-//		for (Entry<String, String> pair : irregularVerbMap.entrySet()) {
-//			boolean redundant = false;
-//			if (pair.getValue().equals(verbPastSimpleStem(pair.getKey()))) {
-//				redundant = true;
-//			}
-//			if (pair.getValue().equals(stemVBZ(pair.getKey()))) {
-//				redundant = true;
-//			}
-//			if (pair.getValue()
-//					.equals(verbPresentParticipleStem(pair.getKey()))) {
-//				redundant = true;
-//			}
-//			if (!redundant) {
-//				StringBuilder vlist = irregularSet.get(pair.getValue());
-//				if (vlist == null)
-//					vlist = new StringBuilder();
-//				vlist.append(' ');
-//				vlist.append(pair.getKey());
-//				irregularSet.put(pair.getValue(), vlist);
-//			}
-//		}
-//
-//		PrintWriter pw = null;
-//		try {
-//			pw = new PrintWriter(new FileWriter(FILENAME));
-//			for (Entry<String, StringBuilder> pair : irregularSet.entrySet()) {
-//				pw.write(pair.getKey());
-//				pw.write(pair.getValue().toString());
-//				pw.write('\n');
-//			}
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		if (pw != null)
-//			pw.close();
-//	}
-//
-//	private static void prepareTestData() {
-//		Map<String, String> inputMap = new HashMap<>();
-//		Scanner br = null;
-//		try {
-//			br = new Scanner(new FileReader("stemmingInput.txt"));
-//			while (br.hasNextLine()) {
-//				String[] words = br.nextLine().split(" ");
-//				for (int i = 1; i < words.length; i++) {
-//					inputMap.put(words[i].intern(), words[0].intern());
-//				}
-//			}
-//		} catch (FileNotFoundException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		if (br != null)
-//			br.close();
-//
-//		MaxentTagger PoSTagger = new MaxentTagger(
-//				"lib/english-left3words-distsim.tagger");
-//		Set<String> POSN = new HashSet<>(Arrays.asList(new String[] { "NNS",
-//				"NN", "NNPS", "NNP" }));
-//		Set<String> POSV = new HashSet<>(Arrays.asList(new String[] { "VB",
-//				"VBG", "VBZ", "VBN", "VBP" }));
-//		int countNNS = 0;
-//		int countNN = 0;
-//		int countNNPS = 0;
-//		int countNNP = 0;
-//		int countVB = 0;
-//		int countVBG = 0;
-//		int countVBZ = 0;
-//		int countVBN = 0;
-//		int countVBP = 0;
-//		Map<String, String> outputMap = new HashMap<>();
-//		for (Entry<String, String> pair : inputMap.entrySet()) {
-//			String tagged = PoSTagger.tagString(pair.getKey());
-//			// Output the result
-//			// System.out.println(tagged);
-//			String noSpace[] = tagged.split(" ");
-//			String[] results = noSpace[0].split("_");
-//			if (results.length == 2) {
-//				switch (results[1]) {
-//				case "NNS":
-//					if (countNNS < 500 && results[0].length() > 1) {
-//						countNNS++;
-//						outputMap.put(pair.getValue(), pair.getKey() + " "
-//								+ results[1]);
-//					}
-//					break;
-//				case "NN":
-//					if (countNN < 500 && results[0].length() > 1) {
-//						countNN++;
-//						outputMap.put(pair.getKey(), pair.getKey() + " "
-//								+ results[1]);
-//					}
-//					break;
-//				case "NNPS":
-//					if (countNNPS <= 500 && results[0].length() > 1) {
-//						countNNPS++;
-//						outputMap.put(pair.getValue(), pair.getKey() + " "
-//								+ results[1]);
-//					}
-//					break;
-//				case "NNP":
-//					if (countNNP < 500 && results[0].length() > 1) {
-//						countNNP++;
-//						outputMap.put(pair.getKey(), pair.getKey() + " "
-//								+ results[1]);
-//					}
-//					break;
-//				case "VB":
-//					if (countVB < 500 && results[0].length() > 1) {
-//						countVB++;
-//						outputMap.put(pair.getKey(), pair.getKey() + " "
-//								+ results[1]);
-//					}
-//					break;
-//				case "VBG":
-//					if (countVBG < 500 && results[0].length() > 1) {
-//						countVBG++;
-//						outputMap.put(pair.getValue(), pair.getKey() + " "
-//								+ results[1]);
-//					}
-//					break;
-//				case "VBN":
-//					if (countVBN < 500 && results[0].length() > 1) {
-//						countVBN++;
-//						outputMap.put(pair.getValue(), pair.getKey() + " "
-//								+ results[1]);
-//					}
-//					break;
-//				case "VBZ":
-//					if (countVBZ < 500 && results[0].length() > 1) {
-//						countVBZ++;
-//						outputMap.put(pair.getValue(), pair.getKey() + " "
-//								+ results[1]);
-//					}
-//					break;
-//				case "VBP":
-//					if (countVBP < 500 && results[0].length() > 1) {
-//						countVBP++;
-//						outputMap.put(pair.getValue(), pair.getKey() + " "
-//								+ results[1]);
-//					}
-//					break;
-//				}
-//			}
-//		}
-//		System.out.println("Number of NN = " + countNN);
-//		System.out.println("Number of NNS = " + countNNS);
-//		System.out.println("Number of NNP = " + countNNP);
-//		System.out.println("Number of NNPS = " + countNNPS);
-//		System.out.println("Number of VB = " + countVB);
-//		System.out.println("Number of VBP = " + countVBP);
-//		System.out.println("Number of VBN = " + countVBN);
-//		System.out.println("Number of VBG = " + countVBG);
-//		System.out.println("Number of VBZ = " + countVBZ);
-//		PrintWriter pw = null;
-//		try {
-//			pw = new PrintWriter(new FileWriter("test.txt"));
-//			for (Entry<String, String> pair : outputMap.entrySet()) {
-//				pw.write(pair.getKey());
-//				pw.write(" ");
-//				pw.write(pair.getValue());
-//				pw.write('\n');
-//			}
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		if (pw != null)
-//			pw.close();
-//	}
+	// private void irregularVerbRedundancyTest() {
+	// Map<String, StringBuilder> irregularSet = new HashMap<>();
+	// for (Entry<String, String> pair : irregularVerbMap.entrySet()) {
+	// boolean redundant = false;
+	// if (pair.getValue().equals(verbPastSimpleStem(pair.getKey()))) {
+	// redundant = true;
+	// }
+	// if (pair.getValue().equals(stemVBZ(pair.getKey()))) {
+	// redundant = true;
+	// }
+	// if (pair.getValue()
+	// .equals(verbPresentParticipleStem(pair.getKey()))) {
+	// redundant = true;
+	// }
+	// if (!redundant) {
+	// StringBuilder vlist = irregularSet.get(pair.getValue());
+	// if (vlist == null)
+	// vlist = new StringBuilder();
+	// vlist.append(' ');
+	// vlist.append(pair.getKey());
+	// irregularSet.put(pair.getValue(), vlist);
+	// }
+	// }
+	//
+	// PrintWriter pw = null;
+	// try {
+	// pw = new PrintWriter(new FileWriter(FILENAME));
+	// for (Entry<String, StringBuilder> pair : irregularSet.entrySet()) {
+	// pw.write(pair.getKey());
+	// pw.write(pair.getValue().toString());
+	// pw.write('\n');
+	// }
+	// } catch (IOException e) {
+	// // TODO Auto-generated catch block
+	// e.printStackTrace();
+	// }
+	// if (pw != null)
+	// pw.close();
+	// }
+	//
+	// private static void prepareTestData() {
+	// Map<String, String> inputMap = new HashMap<>();
+	// Scanner br = null;
+	// try {
+	// br = new Scanner(new FileReader("stemmingInput.txt"));
+	// while (br.hasNextLine()) {
+	// String[] words = br.nextLine().split(" ");
+	// for (int i = 1; i < words.length; i++) {
+	// inputMap.put(words[i].intern(), words[0].intern());
+	// }
+	// }
+	// } catch (FileNotFoundException e) {
+	// // TODO Auto-generated catch block
+	// e.printStackTrace();
+	// }
+	// if (br != null)
+	// br.close();
+	//
+	// MaxentTagger PoSTagger = new MaxentTagger(
+	// "lib/english-left3words-distsim.tagger");
+	// Set<String> POSN = new HashSet<>(Arrays.asList(new String[] { "NNS",
+	// "NN", "NNPS", "NNP" }));
+	// Set<String> POSV = new HashSet<>(Arrays.asList(new String[] { "VB",
+	// "VBG", "VBZ", "VBN", "VBP" }));
+	// int countNNS = 0;
+	// int countNN = 0;
+	// int countNNPS = 0;
+	// int countNNP = 0;
+	// int countVB = 0;
+	// int countVBG = 0;
+	// int countVBZ = 0;
+	// int countVBN = 0;
+	// int countVBP = 0;
+	// Map<String, String> outputMap = new HashMap<>();
+	// for (Entry<String, String> pair : inputMap.entrySet()) {
+	// String tagged = PoSTagger.tagString(pair.getKey());
+	// // Output the result
+	// // System.out.println(tagged);
+	// String noSpace[] = tagged.split(" ");
+	// String[] results = noSpace[0].split("_");
+	// if (results.length == 2) {
+	// switch (results[1]) {
+	// case "NNS":
+	// if (countNNS < 500 && results[0].length() > 1) {
+	// countNNS++;
+	// outputMap.put(pair.getValue(), pair.getKey() + " "
+	// + results[1]);
+	// }
+	// break;
+	// case "NN":
+	// if (countNN < 500 && results[0].length() > 1) {
+	// countNN++;
+	// outputMap.put(pair.getKey(), pair.getKey() + " "
+	// + results[1]);
+	// }
+	// break;
+	// case "NNPS":
+	// if (countNNPS <= 500 && results[0].length() > 1) {
+	// countNNPS++;
+	// outputMap.put(pair.getValue(), pair.getKey() + " "
+	// + results[1]);
+	// }
+	// break;
+	// case "NNP":
+	// if (countNNP < 500 && results[0].length() > 1) {
+	// countNNP++;
+	// outputMap.put(pair.getKey(), pair.getKey() + " "
+	// + results[1]);
+	// }
+	// break;
+	// case "VB":
+	// if (countVB < 500 && results[0].length() > 1) {
+	// countVB++;
+	// outputMap.put(pair.getKey(), pair.getKey() + " "
+	// + results[1]);
+	// }
+	// break;
+	// case "VBG":
+	// if (countVBG < 500 && results[0].length() > 1) {
+	// countVBG++;
+	// outputMap.put(pair.getValue(), pair.getKey() + " "
+	// + results[1]);
+	// }
+	// break;
+	// case "VBN":
+	// if (countVBN < 500 && results[0].length() > 1) {
+	// countVBN++;
+	// outputMap.put(pair.getValue(), pair.getKey() + " "
+	// + results[1]);
+	// }
+	// break;
+	// case "VBZ":
+	// if (countVBZ < 500 && results[0].length() > 1) {
+	// countVBZ++;
+	// outputMap.put(pair.getValue(), pair.getKey() + " "
+	// + results[1]);
+	// }
+	// break;
+	// case "VBP":
+	// if (countVBP < 500 && results[0].length() > 1) {
+	// countVBP++;
+	// outputMap.put(pair.getValue(), pair.getKey() + " "
+	// + results[1]);
+	// }
+	// break;
+	// }
+	// }
+	// }
+	// System.out.println("Number of NN = " + countNN);
+	// System.out.println("Number of NNS = " + countNNS);
+	// System.out.println("Number of NNP = " + countNNP);
+	// System.out.println("Number of NNPS = " + countNNPS);
+	// System.out.println("Number of VB = " + countVB);
+	// System.out.println("Number of VBP = " + countVBP);
+	// System.out.println("Number of VBN = " + countVBN);
+	// System.out.println("Number of VBG = " + countVBG);
+	// System.out.println("Number of VBZ = " + countVBZ);
+	// PrintWriter pw = null;
+	// try {
+	// pw = new PrintWriter(new FileWriter("test.txt"));
+	// for (Entry<String, String> pair : outputMap.entrySet()) {
+	// pw.write(pair.getKey());
+	// pw.write(" ");
+	// pw.write(pair.getValue());
+	// pw.write('\n');
+	// }
+	// } catch (IOException e) {
+	// // TODO Auto-generated catch block
+	// e.printStackTrace();
+	// }
+	// if (pw != null)
+	// pw.close();
+	// }
 
 	public static void main(String[] args) {
 		// prepareTestData();

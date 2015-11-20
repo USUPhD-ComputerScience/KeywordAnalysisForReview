@@ -27,7 +27,7 @@ public class CharacterTriGramTrainer {
 			File fcheckExist = new File(OUTPUTFILE);
 			instance = new CharacterTriGramTrainer();
 			if (fcheckExist.exists() && !fcheckExist.isDirectory()) {
-				System.err.println(">> reading trained nGram data");
+				System.err.println("> reading trained nGram data");
 				instance.readTrainedData(OUTPUTFILE);
 			} else {
 				System.out.println("Trainning...");

@@ -3,7 +3,10 @@ package util;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class Util {
@@ -18,7 +21,12 @@ public class Util {
 		});
 		return filePaths;
 	}
-
+	public static long normalizeDate(long date) throws ParseException {
+		Date d = new Date(date);
+		SimpleDateFormat df2 = new SimpleDateFormat("dd-MM-yy");
+		String dateText = df2.format(d);
+		return df2.parse(dateText).getTime();
+	}
 	public static int[] toIntArray(List<Integer> list) {
 		int[] ret = new int[list.size()];
 		for (int i = 0; i < ret.length; i++)

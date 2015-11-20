@@ -49,7 +49,7 @@ public class MovingDBmain {
 
 	private static void ChoosingAppsToCrawl() throws Throwable {
 		List<Application> appList = ReviewDB.getInstance()
-				.queryMultipleAppsInfo(0);
+				.queryMultipleAppsInfo(0).getAppList();
 		List<String> specialList = readAppInforFromFile("AoI.txt");
 		int fileCount = 0;
 		int appCount = 0;

@@ -18,6 +18,7 @@ public class CrawlerMain {
 	public static void main(String[] args) throws Throwable {
 		// TODO Auto-generated method stub
 		System.out.println("====== Crawling reviews from Google Play ======");
+		System.out.println("Delay = " + Crawler.DELAYSECONDS + " seconds");
 		if (args.length != 2) {
 
 			System.out
@@ -77,7 +78,7 @@ public class CrawlerMain {
 			System.out.println("============================");
 			iterationCount++;
 			try {
-				TimeUnit.MINUTES.sleep(30);
+				TimeUnit.MINUTES.sleep(15);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

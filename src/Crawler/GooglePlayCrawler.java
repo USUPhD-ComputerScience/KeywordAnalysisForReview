@@ -32,7 +32,7 @@ public class GooglePlayCrawler {
 		try {
 			ver = service.details(appid).getDocV2().getDetails()
 					.getAppDetails().getVersionString();
-			TimeUnit.SECONDS.sleep(1);
+			TimeUnit.SECONDS.sleep(Crawler.DELAYSECONDS);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -49,7 +49,7 @@ public class GooglePlayCrawler {
 			numd = service.details(appid).getDocV2().getDetails()
 					.getAppDetails().getNumDownloads();
 			numd = numd.replaceAll("[^0-9]", "");
-			TimeUnit.SECONDS.sleep(1);
+			TimeUnit.SECONDS.sleep(Crawler.DELAYSECONDS);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -63,7 +63,7 @@ public class GooglePlayCrawler {
 	public String getName(String appid) {
 		String name = "unknown";
 		try {
-			TimeUnit.SECONDS.sleep(1);
+			TimeUnit.SECONDS.sleep(Crawler.DELAYSECONDS);
 			name = service.details(appid).getDocV2().getTitle();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -85,7 +85,7 @@ public class GooglePlayCrawler {
 			SimpleDateFormat f = new SimpleDateFormat("MMM dd,yyyy");
 			Date date = (Date) f.parse(versionDate);
 			uploadDate = date.getTime();
-			TimeUnit.SECONDS.sleep(1);
+			TimeUnit.SECONDS.sleep(Crawler.DELAYSECONDS);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -109,7 +109,7 @@ public class GooglePlayCrawler {
 					.getAppDetails().getRecentChangesHtml()
 					.replaceAll("&quot;", "").replaceAll("<br>", "\n"));
 
-			TimeUnit.SECONDS.sleep(1);
+			TimeUnit.SECONDS.sleep(Crawler.DELAYSECONDS);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -128,7 +128,7 @@ public class GooglePlayCrawler {
 		int failAttempts = 0;
 		while (!stop) {
 			try {
-				TimeUnit.SECONDS.sleep(1);
+				TimeUnit.SECONDS.sleep(Crawler.DELAYSECONDS);
 				ReviewResponse reviews;
 				reviews = service.reviews(appid, sort, start, 20);
 				String url = reviews.getNextPageUrl();

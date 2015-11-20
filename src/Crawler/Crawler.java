@@ -20,6 +20,7 @@ public class Crawler {
 	// private static final String ANDROID = "32F52476388F20DE";
 	// private static final String ANDROID = "dead000beef";
 	public static final int GOOGLE_PLAY = 1;
+	public static final int DELAYSECONDS = 3;
 
 	public Crawler() {
 		// run Google Play Crawler

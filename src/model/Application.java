@@ -27,7 +27,9 @@ public class Application implements Serializable {
 	public static final long HOURMILIS = 3600000L;
 	public static final long DAYMILIS = 86400000L;
 	private static final long serialVersionUID = -2497544910820359076L;
-	private Map<String, ReviewForAnalysis> reviewMap;
+	//private Map<String, ReviewForAnalysis> reviewMap;
+
+	private Set<ReviewForAnalysis> mReviews = new HashSet<>();
 	private Set<Long> releaseDates;
 	private String appID;
 	private String name;
@@ -35,10 +37,15 @@ public class Application implements Serializable {
 	private int WorkingCount;
 	private long startDate;
 	private int dayIndex = -1;
-	private long dayIndex_time;
+	public Set<ReviewForAnalysis> getReviews() {
+		return mReviews;
+	}
+	public Set<ReviewForAnalysis> getReviewList() {
+		return mReviews;
+	}
 
 	public long getPreprocessedDate() {
-		return dayIndex_time;
+		return (dayIndex + 1) * DAYMILIS + startDate;
 	}
 
 	public long getStartDate() {
@@ -51,20 +58,18 @@ public class Application implements Serializable {
 
 	public int syncDayIndex(long creationTime) {
 		int daysSinceStart = (int) ((creationTime - startDate) / DAYMILIS);
-		//Date d = new Date(creationTime);
+		// Date d = new Date(creationTime);
 		int neededSlot = daysSinceStart - dayIndex;
 		if (neededSlot > 0) {
 			// update timeseries for all words in this app (+ slot number of new
 			// 0 to all timeseries)
-			Vocabulary.getInstance()
-					.extendKeywordsTimeseries(neededSlot, appID);
+			Vocabulary.getInstance().doKeywordsPOS(appID);
 			// update dayIndex and dayIndex_time
 			dayIndex = daysSinceStart;
-			dayIndex_time = startDate + daysSinceStart * DAYMILIS;
 		}
 		return neededSlot;
 	}
-
+	
 	public String getAppID() {
 		return appID;
 	}
@@ -106,21 +111,32 @@ public class Application implements Serializable {
 	 * Add a review to this Application
 	 * 
 	 */
-	public ReviewForAnalysis addReview(ReviewForAnalysis rev) {
-		ReviewForAnalysis review = reviewMap.get(rev.getReviewId().intern());
-		if (review == null)
-			return reviewMap.put(rev.getReviewId().intern(), rev);
-		return null;
+//	public ReviewForAnalysis addReview(ReviewForAnalysis rev) {
+//		ReviewForAnalysis review = reviewMap.get(rev.getReviewId().intern());
+//		if (review == null)
+//			return reviewMap.put(rev.getReviewId().intern(), rev);
+//		return null;
+//	}
+
+	public void addReview(ReviewForAnalysis rev, boolean data) {
+		long ct = rev.getCreationTime();
+		if (ct < 1420095600000l)
+			return;
+		if (ct < startDate)
+			startDate = ct;
+		mReviews.add(rev);
 	}
 
-	public void writeSentenceToFile(PrintWriter fileWriter) {
+	
+	
+	public void writeTrainingDataToFile(PrintWriter fileWriter) {
 
-		for (ReviewForAnalysis review : reviewMap.values()) {
+		for (ReviewForAnalysis review : mReviews) {
 			if (review.getSentences() == null
 					|| review.getSentences().length == 0)
 				continue;
 			try {
-				review.writeSentenceToFile(fileWriter);
+				review.writeTrainingDataToFile(fileWriter);
 			} catch (Exception e) {
 				System.err.println(e.getMessage());
 			}
@@ -128,14 +144,14 @@ public class Application implements Serializable {
 		}
 	}
 
-	public boolean contains(String reviewID) {
-		return reviewMap.containsKey(reviewID);
-	}
+//	public boolean contains(String reviewID) {
+//		return mReviews.containsKey(reviewID);
+//	}
 
 	public Application(String appID, String name, int count,
 			Long[] releaseDates, long start_date, int dayID) {
 		this.appID = appID;
-		reviewMap = new HashMap<>();
+		//reviewMap = new HashMap<>();
 		if (releaseDates == null)
 			this.releaseDates = new HashSet<>();
 		else
@@ -143,7 +159,7 @@ public class Application implements Serializable {
 		dbCount = count;
 		startDate = start_date;
 		dayIndex = dayID;
-		dayIndex_time = start_date + dayID * DAYMILIS;
+		//dayIndex_time = start_date + dayID * DAYMILIS;
 		Vocabulary.getInstance().addNewApp(appID);
 	}
 
@@ -168,7 +184,4 @@ public class Application implements Serializable {
 		return releaseDates;
 	}
 
-	public List<ReviewForAnalysis> getReviews() {
-		return new ArrayList<ReviewForAnalysis>(reviewMap.values());
-	}
 }

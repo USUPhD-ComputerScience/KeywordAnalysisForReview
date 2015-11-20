@@ -26,32 +26,37 @@ CREATE TABLE reviews(
    UNIQUE (appid, reviewid)
 );
 
+CREATE INDEX ON reviews (appid);
+
 // ratex_byday: i,i,i,i,i,i,i
 // POS: pos,i;pos,i;pos,i
 CREATE TABLE keywords(
-   ID			SERIAL PRIMARY KEY NOT NULL,
-   appid		TEXT references apps(appid),
-   keyword		TEXT,
-   rate1_byday	TEXT,
-   rate2_byday	TEXT,
-   rate3_byday	TEXT,
-   rate4_byday	TEXT,
-   rate5_byday	TEXT,
-   POS			TEXT,
+   ID SERIAL PRIMARY KEY NOT NULL,
+   appid TEXT references apps(appid),
+   keyword TEXT,
+   POS TEXT,
    UNIQUE (appid, keyword)
 );
+CREATE INDEX ON keywords (appid);
 
-CREATE TABLE review_keyword(
-   ID			INT PRIMARY KEY NOT NULL,
-   reviewid		INT	references reviews(ID),
-   keywordid	INT	references keywords(ID),
-   tf			INT,
-   UNIQUE (reviewid, keywordid)
+//0: 	r1 INT,
+//1:   	r2 INT,
+//2:   	r3 INT,
+//3:   	r4 INT,
+//4:   	r5 INT,
+// date: dd-mm-yyyy
+// counts of each keyword appear in [date,DAY_MILIS)
+CREATE TABLE days(
+   ID SERIAL PRIMARY KEY NOT NULL,
+   date BIGINT NOT NULL,
+   keyword_id INT references keywords(ID),
+   type INT NOT NULL,
+   count INT,
+   UNIQUE (keyword_id, date, type)
 );
+CREATE INDEX ON days (keyword_id);
 
 CREATE TABLE word2vec(
-   ID			INT PRIMARY KEY NOT NULL,
-   keywordid		INT	references keywords(ID),
-   vector		REAL[],
-   UNIQUE (keywordid)
+   word			TEXT PRIMARY KEY NOT NULL,
+   vector		TEXT
 );

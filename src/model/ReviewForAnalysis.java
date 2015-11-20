@@ -3,9 +3,12 @@ package model;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import util.Util;
 import NLP.NatureLanguageProcessor;
@@ -29,6 +32,19 @@ public class ReviewForAnalysis implements Serializable {
 	private int rating;
 	private String rawText;
 
+	public Set<Word> getWordList() throws SQLException {
+		Vocabulary voc = Vocabulary.getInstance();
+		Set<Word> wordSet = new HashSet<>();
+		for (int[] sen : sentences) {
+			for (int wID : sen) {
+				Word w = voc.getWord(wID, application, false);
+				if (w != null)
+					wordSet.add(w);
+			}
+		}
+		return wordSet;
+	}
+
 	/**
 	 * Only for constructor. This function break a string into words in 4 steps:
 	 * 
@@ -43,8 +59,9 @@ public class ReviewForAnalysis implements Serializable {
 	 *            - The sentence to extract words from
 	 * @return TRUE if it successfully extracted some words, FALSE otherwise
 	 * @throws SQLException
+	 * @throws ParseException 
 	 */
-	public boolean extractSentences() throws SQLException {
+	public int extractSentences() throws SQLException, ParseException {
 		Vocabulary voc = Vocabulary.getInstance();
 
 		// first, check if this is a new day: update information on all keywords
@@ -54,12 +71,12 @@ public class ReviewForAnalysis implements Serializable {
 		NatureLanguageProcessor nlp = NatureLanguageProcessor.getInstance();
 		String[] rawSentences = nlp.extractSentence(rawText);
 		int[][] sentences_temp = new int[rawSentences.length][0];
-		int countValidSen = 0;
+		int countValidSen = 0, countWord =0;
 		for (int i = 0; i < rawSentences.length; i++) {
 			List<Integer> wordIDList = new ArrayList<>();
 			List<String> wordList = nlp.extractWordsFromText(rawSentences[i]);
 			if (wordList == null)
-				return false;
+				return 0;
 			List<String[]> stemmedWordsWithPOS = nlp.stem(nlp
 					.findPosTag(wordList));
 
@@ -69,8 +86,9 @@ public class ReviewForAnalysis implements Serializable {
 						continue;
 					// add into voc, get wordID as returning param
 					int wordid = voc.addWord(pair[0], pair[1], application,
-							rating - 1);
+							rating - 1,this);
 					wordIDList.add(wordid);
+					countWord++;
 				}
 			}
 			if (!wordIDList.isEmpty()) {
@@ -85,9 +103,60 @@ public class ReviewForAnalysis implements Serializable {
 			if (sen.length > 0)
 				sentences[index++] = sen;
 		}
-		return true;
+		return countWord;
 	}
-
+//	public int extractWords() throws SQLException, ParseException {
+//		Vocabulary voc = Vocabulary.getInstance();
+//
+//		// first, check if this is a new day: update information on all keywords
+//		// of this app.
+//		application.syncDayIndex(creationTime);
+//		// continue extracting sentences and keywords.
+//		NatureLanguageProcessor nlp = NatureLanguageProcessor.getInstance();
+//		List<String> tokenList = NatureLanguageProcessor
+//				.extractWordsFromText(rawText);
+//		for (String token : tokenList) {
+//			List<String> words = NatureLanguageProcessor.splitIdentifier(token);
+//			if (words.size() > 1) {
+//				// identifier
+//				for (String word : words) {
+//					if (!nlp.isStopWord(word.toLowerCase())) {
+//						String[] word_POS = nlp.findPosTag(word.toLowerCase());
+//						if (word_POS == null)
+//							continue;
+//						word_POS = nlp.stem(word_POS);
+//						// System.out.println(
+//						// " " + word_POS[0] + "_" + word_POS[1]);
+//						mWordListNoIdentifer.add(
+//								voc.addWord(word_POS[0], word_POS[1], mProduct,
+//										mPriority, mSeverity, false, this));
+//					}
+//				}
+//				if (!nlp.isStopWord(token.toLowerCase()))
+//					mWordListIdentifer.add(voc.addWord(token, "NN", mProduct,
+//							mPriority, mSeverity, true, this));
+//			} else {
+//				// not identifier
+//				if (!nlp.isStopWord(words.get(0).toLowerCase())) {
+//					String[] word_POS = nlp
+//							.findPosTag(words.get(0).toLowerCase());
+//					if (word_POS == null)
+//						continue;
+//					word_POS = nlp.stem(word_POS);
+//					// System.out.println(" " + word_POS[0] + "_" +
+//					// word_POS[1]);
+//
+//					// add into voc, get wordID as returning param
+//					mWordListNoIdentifer
+//							.add(voc.addWord(word_POS[0], word_POS[1], mProduct,
+//									mPriority, mSeverity, false, this));
+//					mWordListIdentifer.add(voc.addWord(word_POS[0], word_POS[1],
+//							mProduct, mPriority, mSeverity, true, this));
+//				}
+//			}
+//		}
+//		return tokenList.size();
+//	}
 	public String getRawText() {
 		return rawText;
 	}
@@ -246,7 +315,7 @@ public class ReviewForAnalysis implements Serializable {
 		}
 	}
 
-	public void writeSentenceToFile(PrintWriter fileWriter) {
+	public void writeTrainingDataToFile(PrintWriter fileWriter) {
 		// TODO Auto-generated method stub
 		fileWriter.println(toString());
 	}
@@ -264,7 +333,7 @@ public class ReviewForAnalysis implements Serializable {
 			for (int wordID : sentence) {
 				Word w;
 				try {
-					w = voc.getWord(wordID, application);
+					w = voc.getWord(wordID, application, false);
 					if (w != null) {
 						strBld.append(prefix);
 						strBld.append(w.toString());
@@ -293,7 +362,7 @@ public class ReviewForAnalysis implements Serializable {
 			for (int wordID : sentence) {
 				Word w;
 				try {
-					w = voc.getWord(wordID, application);
+					w = voc.getWord(wordID, application, false);
 					if (w != null) {
 						strBld.append(prefix);
 						strBld.append(w.toString());

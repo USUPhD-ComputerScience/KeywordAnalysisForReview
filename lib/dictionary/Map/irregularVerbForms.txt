@@ -6,13 +6,17 @@ unswear unsworn unswore
 bedrink bedrank
 proove prooving prove prooved prooven
 sell sold
+use used using
+make made
 oversee oversaw overseen
 awake awaking awaked
 hang hung
 resend resent
+send sent
 stride strid stridden strode
 plague plaguing plagued
 swike swoke swicken
+spend spent spending
 bind bounden bound
 partake partook partaking partaken
 intercome intercoming intercame
@@ -20,6 +24,9 @@ outnim outnomen outnum outnome outnam
 respeak respoke respoken
 overwrite overwritten overwrote overwriting
 speedrun speedran
+pee peed
+are were
+is was
 overlade overladed overheld overlading overholden
 bedo bedid bedone
 rebear reborne rebore
@@ -48,8 +55,11 @@ drive drove driven drave
 underget undergotten undergot
 prove proven
 bego bewent begone
+feed fed
 overdo overdone overdid
 nill nould
+catch caught
+scroll scrolling
 underbear underbore underborne underbare
 bequeath bequoth bequethen
 forsmite forsmiting forsmitten forsmote
@@ -70,6 +80,8 @@ slay slain slew
 forebite forebit forebitten forebiting
 forbeat forbeaten forbeating
 accurse accurst
+talk told
+say said
 forbear forbore forborne
 forlat forlatten forlut forlutten forleet
 hagride hagrode hagrid hagridden hagriding
@@ -137,10 +149,12 @@ drinck dranck drunck
 choose chose chosen
 overtake overtaking overtook overtaken
 ride ridden rode
+breed bred
+teach taught
 outsing outsang outsung
 thoroughgo thoroughwent thoroughgone
 ungive ungave ungiven
-undo undone undid
+undo undone undid undoes
 load loaden
 bite bitten bit
 shrive shriven shrove
@@ -170,9 +184,15 @@ bedraw bedrawn bedrew
 resow resown
 atrine atrined atrining atrinnen atrone
 withdraw withdrawn withdrew
+misspell misspelt
+lay laid
 atshake atshaken atshook atshaking
 bestride bestridden bestrid bestriding bestrode
 tole tollen
+woman women
+man men
+rebuild rebuilt
+lead led
 manswear mansworn manswore
 outcreep outcrept outcrope outcropen
 overbeat overbeating
@@ -181,6 +201,7 @@ overbear overbore overborne
 forthgo forthgone forthwent
 overblow overblown overblew
 fortear fortore fortorn
+lie lying lied
 invoke invoking invoked
 rerun reran
 overstrew overstrewn
@@ -192,6 +213,7 @@ write writ wrote written
 offhold offholden offheld
 withgo withwent withgone
 shape shope shapen
+cache caching cached
 slite slote slitten slit
 preshow preshown
 upspring upsprung upsprang
@@ -231,12 +253,13 @@ showrun showran
 yield yolden yold
 outshow outshown
 forfret forfrate forfreet forfretten
-speak spoken spake
+speak spoken spake spoke
 outeat outeating outate outeaten
 heave hove hoven
 abite abit abitten abiting
 underhold underheld underholden
 unbid unbidden
+die dying died
 missee missaw misseen
 quethe quod quething quoth quethen quethed
 betee betown beteed betow
@@ -419,6 +442,8 @@ lin lan lun
 foreknow foreknown foreknew
 forhold forheld forholden
 beseech besought
+seek sought
+dig dug
 continue continuing
 shoot shotten shot
 copywrite copywritten copywrote copywriting
@@ -428,13 +453,18 @@ forgo forwent forgone
 shortcome shortcoming shortcame
 sink sank sunken sunk
 prepay prepaid
+pay paid
+lend lent
+think thought
 betread betrodden betrod
 oversow oversown
+build built
 upbreak upbroke upbroken
 forsteal forstolen forstole
 crow crew
 undraw undrawn undrew
 know knew
+bring brought
 sing sang singing sungen sung
 autohide autohidden autohiding autohid
 beflay beflain
@@ -452,7 +482,7 @@ fordo fordid fordone
 outtake outtaken outtaking outtook
 show shown
 forgnide forgnided forgnode forgniding forgnidden
-sweare sworne swore swearing
+swear sworn swore swearing
 fortee forteed fortow fortown
 overdrink overdrank overdrunk
 gan gannin
@@ -554,6 +584,7 @@ reweave rewoven rewove
 forswing forswang forswung forswungen
 presew presewn
 braid browden
+win won
 behold beholden beheld
 forswink forswonk forswank forswunk forswunken
 benim benam benomen benome

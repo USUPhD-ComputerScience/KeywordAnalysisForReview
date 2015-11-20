@@ -40,7 +40,7 @@ public class SymSpell implements Serializable {
 			// System.out.println("Took " + (System.currentTimeMillis() - start)
 			// / 1000 + " seconds!");
 			// start = System.currentTimeMillis();
-			System.out.println(">>Creating improvised basic dictionary ...");
+			System.out.println(">Creating improvised basic dictionary ...");
 			instance.createDictionary("lib/dictionary/baseWord/",
 					instance.baseDictionary);
 			System.out.println("Took " + (System.currentTimeMillis() - start)
